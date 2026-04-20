@@ -1,0 +1,45 @@
+---
+import Base from '../../layouts/Base.astro';
+import BlogCard from '../../components/BlogCard.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('commons'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<Base
+  title="The Commons — work in progress"
+  description="Documenting the build of a civic platform — decisions, dead ends, and learning."
+>
+  <div class="container" style="padding-block: 3rem;">
+    <header style="margin-bottom: 2.5rem;">
+      <h1>The Commons</h1>
+      <p class="hand subtitle">work in progress</p>
+      <p style="color: var(--ink-light); max-width: 520px; margin-top: 1rem;">
+        A running record of a civic platform project — what I'm building,
+        why, and what I'm figuring out as I go.
+      </p>
+    </header>
+
+    {posts.length === 0
+      ? <p class="hand" style="color: var(--ink-light);">No posts yet — check back soon.</p>
+      : <ul class="post-list">{posts.map(post => (
+          <BlogCard
+            title={post.data.title}
+            date={post.data.date}
+            description={post.data.description ?? ''}
+            href={`/commons/${post.id}`}
+          />
+        ))}</ul>
+    }
+  </div>
+</Base>
+
+<style>
+  .subtitle {
+    color: var(--ink-light);
+    font-size: 1.1rem;
+    font-style: italic;
+    margin-top: -0.5rem;
+  }
+</style>

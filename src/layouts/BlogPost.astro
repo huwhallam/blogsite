@@ -1,0 +1,105 @@
+---
+import Base from './Base.astro';
+
+export interface Props {
+  title: string;
+  date: Date;
+  description?: string;
+  blog: 'commons' | 'abundance';
+}
+
+const { title, date, description, blog } = Astro.props;
+
+const blogMeta = {
+  commons:   { label: 'The Commons — work in progress', href: '/commons' },
+  abundance: { label: 'Towards Abundance', href: '/abundance' },
+};
+const meta = blogMeta[blog];
+
+const formatted = date.toLocaleDateString('en-GB', {
+  day: 'numeric', month: 'long', year: 'numeric',
+});
+---
+
+<Base title={`${title} — ${meta.label}`} description={description}>
+  <article class="container post-body">
+    <nav class="breadcrumb hand" aria-label="Breadcrumb">
+      <a href={meta.href}>← {meta.label}</a>
+    </nav>
+
+    <header class="post-header">
+      <time class="hand post-date" datetime={date.toISOString()}>{formatted}</time>
+      <h1>{title}</h1>
+      {description && <p class="post-desc">{description}</p>}
+    </header>
+
+    <div class="prose">
+      <slot />
+    </div>
+  </article>
+</Base>
+
+<style>
+  .post-body { padding-block: 3rem; }
+
+  .breadcrumb {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    display: block;
+  }
+  .breadcrumb a { color: var(--ink-light); }
+  .breadcrumb a:hover { color: var(--accent); }
+
+  .post-header { margin-bottom: 2.5rem; }
+
+  .post-date {
+    font-size: 1rem;
+    color: var(--ink-light);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-desc {
+    font-size: 1.15rem;
+    color: var(--ink-light);
+    margin-top: 0.75rem;
+  }
+
+  /* Prose typography */
+  .prose :global(h2) { margin-top: 2rem; }
+  .prose :global(h3) { margin-top: 1.5rem; }
+  .prose :global(ul),
+  .prose :global(ol) { padding-left: 1.5rem; margin-bottom: 1em; }
+  .prose :global(li) { margin-bottom: 0.3em; }
+  .prose :global(blockquote) {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--ink-light);
+    font-style: italic;
+    margin-block: 1.5rem;
+  }
+  .prose :global(code) {
+    background: var(--bg-card);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  .prose :global(pre) {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 1.25rem;
+    overflow-x: auto;
+    margin-block: 1.5rem;
+  }
+  .prose :global(pre code) {
+    background: none;
+    padding: 0;
+    font-size: 0.9rem;
+  }
+  .prose :global(img) { max-width: 100%; height: auto; }
+  .prose :global(hr) {
+    border: none;
+    border-top: 2px dashed var(--bg-card);
+    margin-block: 2rem;
+  }
+</style>

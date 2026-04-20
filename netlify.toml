@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Redirect POST submissions to the thank-you page
+[[redirects]]
+  from   = "/contact"
+  to     = "/thanks"
+  status = 200
+  conditions = {Method = ["POST"]}

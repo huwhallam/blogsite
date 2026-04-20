@@ -1,0 +1,62 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+
+export interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const {
+  title,
+  description = "Huw Hallam — Data Scientist, analyst, artist.",
+  ogImage = "/og-default.png",
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? "https://huwhallam.netlify.app");
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Google Fonts preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  </head>
+
+  <body>
+    <a href="#main-content" class="sr-only">Skip to main content</a>
+
+    <Nav />
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <footer>
+      <div class="container" style="padding-block: 2rem; text-align: center;">
+        <p class="hand" style="color: var(--ink-light); font-size: 1rem;">
+          © {new Date().getFullYear()} Huw Hallam &nbsp;·&nbsp;
+          <a href="/contact">get in touch</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

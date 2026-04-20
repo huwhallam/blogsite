@@ -1,0 +1,69 @@
+---
+export interface Props {
+  title: string;
+  date: Date;
+  description: string;
+  href: string;
+}
+const { title, date, description, href } = Astro.props;
+
+const formatted = date.toLocaleDateString('en-GB', {
+  day: 'numeric', month: 'long', year: 'numeric',
+});
+---
+
+<li>
+  <a href={href} class="blog-card">
+    <svg class="card-border" aria-hidden="true" preserveAspectRatio="none">
+      <rect class="sketch-rect" x="4" y="4" width="calc(100% - 8px)" height="calc(100% - 8px)" />
+    </svg>
+    <time class="card-date hand" datetime={date.toISOString()}>{formatted}</time>
+    <h3>{title}</h3>
+    <p class="card-desc">{description}</p>
+    <span class="card-read hand" aria-hidden="true">read →</span>
+  </a>
+</li>
+
+<style>
+  .blog-card {
+    display: block;
+    position: relative;
+    background: var(--bg-card);
+    padding: 1.25rem 1.5rem 1rem;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s;
+    /* Slightly rotated hand-drawn look via box-shadow */
+    box-shadow: 3px 3px 0 var(--ink-light);
+  }
+  .blog-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--accent);
+  }
+
+  .card-date {
+    font-size: 0.95rem;
+    color: var(--ink-light);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  h3 {
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .card-desc {
+    font-size: 0.95rem;
+    color: var(--ink-light);
+    margin-bottom: 0.75rem;
+  }
+
+  .card-read {
+    font-size: 1rem;
+    color: var(--accent2);
+  }
+
+  /* Hide the SVG border for now — using box-shadow instead */
+  .card-border { display: none; }
+</style>

@@ -1,0 +1,113 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="Contact — Huw Hallam"
+  description="Get in touch with Huw Hallam."
+>
+  <div class="container contact-wrap">
+    <h1>Get in touch</h1>
+    <p class="intro">
+      I'm happy to hear from you — about the blogs, the civic platform project,
+      data work, or anything else.
+    </p>
+
+    <!--
+      Netlify Forms: the data-netlify attribute tells Netlify to capture
+      this form's submissions. No backend code required. Submissions appear
+      in your Netlify dashboard under Forms.
+      The hidden "bot-field" is a honeypot — bots fill it in, humans don't,
+      which filters most spam automatically.
+    -->
+    <form
+      name="contact"
+      method="POST"
+      data-netlify="true"
+      netlify-honeypot="bot-field"
+      action="/thanks"
+      class="contact-form"
+    >
+      <input type="hidden" name="form-name" value="contact" />
+      <p class="hidden" aria-hidden="true">
+        <label>Don't fill this out: <input name="bot-field" /></label>
+      </p>
+
+      <div class="field">
+        <label for="name" class="hand">Your name</label>
+        <input type="text" id="name" name="name" required autocomplete="name" />
+      </div>
+
+      <div class="field">
+        <label for="email" class="hand">Your email</label>
+        <input type="email" id="email" name="email" required autocomplete="email" />
+      </div>
+
+      <div class="field">
+        <label for="message" class="hand">Message</label>
+        <textarea id="message" name="message" rows="6" required></textarea>
+      </div>
+
+      <button type="submit" class="hand submit-btn">Send →</button>
+    </form>
+  </div>
+</Base>
+
+<style>
+  .contact-wrap { padding-block: 3rem; max-width: 540px; }
+
+  h1 { margin-bottom: 0.5rem; }
+
+  .intro {
+    color: var(--ink-light);
+    margin-bottom: 2.5rem;
+  }
+
+  .contact-form { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .field { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  label {
+    font-size: 1.1rem;
+    color: var(--ink);
+  }
+
+  input, textarea {
+    background: var(--bg);
+    border: 2px solid var(--bg-card);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 0;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+    box-shadow: 2px 2px 0 var(--bg-card);
+  }
+  input:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 2px 2px 0 var(--accent);
+  }
+  textarea { resize: vertical; }
+
+  .submit-btn {
+    align-self: flex-start;
+    background: var(--accent);
+    color: var(--bg);
+    border: 2px solid var(--accent);
+    font-size: 1.25rem;
+    padding: 0.5rem 1.75rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.15s;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  .submit-btn:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--accent);
+  }
+
+  .hidden { display: none; }
+</style>

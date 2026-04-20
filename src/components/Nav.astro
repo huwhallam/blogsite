@@ -1,0 +1,80 @@
+---
+const currentPath = Astro.url.pathname;
+
+function isActive(path: string): boolean {
+  if (path === '/') return currentPath === '/';
+  return currentPath.startsWith(path);
+}
+---
+
+<header>
+  <nav class="nav-inner container--wide" aria-label="Main navigation">
+    <a href="/" class="nav-home" aria-current={isActive('/') ? 'page' : undefined}>
+      HH
+    </a>
+    <ul class="nav-links" role="list">
+      <li>
+        <a href="/commons" aria-current={isActive('/commons') ? 'page' : undefined}>
+          The Commons
+        </a>
+      </li>
+      <li>
+        <a href="/abundance" aria-current={isActive('/abundance') ? 'page' : undefined}>
+          Towards Abundance
+        </a>
+      </li>
+      <li>
+        <a href="/contact" aria-current={isActive('/contact') ? 'page' : undefined}>
+          Contact
+        </a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<style>
+  header {
+    border-bottom: 2px solid var(--bg-card);
+    padding-block: 1rem;
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .nav-home {
+    font-family: var(--font-hand);
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    margin-right: auto;
+  }
+  .nav-home:hover { color: var(--accent); }
+
+  .nav-links {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .nav-links a {
+    font-family: var(--font-hand);
+    font-size: 1.2rem;
+    color: var(--ink-light);
+    text-decoration: none;
+    padding-bottom: 2px;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .nav-links a:hover,
+  .nav-links a[aria-current="page"] {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+</style>

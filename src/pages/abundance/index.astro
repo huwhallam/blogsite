@@ -1,0 +1,45 @@
+---
+import Base from '../../layouts/Base.astro';
+import BlogCard from '../../components/BlogCard.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('abundance'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<Base
+  title="Towards Abundance — notes on AI safety and economics"
+  description="Thinking out loud about AI, economic structures, and futures that work for more people."
+>
+  <div class="container" style="padding-block: 3rem;">
+    <header style="margin-bottom: 2.5rem;">
+      <h1>Towards Abundance</h1>
+      <p class="hand subtitle">notes on AI safety and economics</p>
+      <p style="color: var(--ink-light); max-width: 520px; margin-top: 1rem;">
+        Thinking about AI development, economic systems, and how we might
+        navigate the transition toward something better.
+      </p>
+    </header>
+
+    {posts.length === 0
+      ? <p class="hand" style="color: var(--ink-light);">No posts yet — check back soon.</p>
+      : <ul class="post-list">{posts.map(post => (
+          <BlogCard
+            title={post.data.title}
+            date={post.data.date}
+            description={post.data.description ?? ''}
+            href={`/abundance/${post.id}`}
+          />
+        ))}</ul>
+    }
+  </div>
+</Base>
+
+<style>
+  .subtitle {
+    color: var(--ink-light);
+    font-size: 1.1rem;
+    font-style: italic;
+    margin-top: -0.5rem;
+  }
+</style>

@@ -1,0 +1,122 @@
+---
+import Base from '../layouts/Base.astro';
+import Maze from '../components/Maze.astro';
+import BlogCard from '../components/BlogCard.astro';
+import { getCollection } from 'astro:content';
+
+const commonsPosts = (await getCollection('commons'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+const abundancePosts = (await getCollection('abundance'))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+---
+
+<Base title="Huw Hallam" description="Data Scientist, analyst, and person of unusual interests.">
+  <Maze />
+
+  <section class="about container">
+    <p>
+      I work at the intersection of data, systems, and the messy, interesting world.
+      Background in data science and analytics; formerly in art and music.
+      Currently building a civic platform and thinking about AI, economics, and abundance.
+    </p>
+    <p>
+      <a href="/contact">Get in touch →</a>
+    </p>
+  </section>
+
+  <div class="blogs-grid container--wide">
+    <!-- Blog 1 -->
+    <section class="blog-preview">
+      <div class="blog-header">
+        <h2 class="hand">The Commons</h2>
+        <p class="blog-subtitle">work in progress</p>
+      </div>
+      <p class="blog-desc">
+        Documenting an attempt to build a civic platform from the ground up —
+        the decisions, the dead ends, and what I'm learning along the way.
+      </p>
+      <ul class="post-list" aria-label="Recent posts in The Commons">
+        {commonsPosts.map(post => (
+          <BlogCard
+            title={post.data.title}
+            date={post.data.date}
+            description={post.data.description ?? ''}
+            href={`/commons/${post.id}`}
+          />
+        ))}
+      </ul>
+      <a href="/commons" class="hand blog-all">all posts →</a>
+    </section>
+
+    <!-- Blog 2 -->
+    <section class="blog-preview">
+      <div class="blog-header">
+        <h2 class="hand">Towards Abundance</h2>
+        <p class="blog-subtitle">notes on AI safety and economics</p>
+      </div>
+      <p class="blog-desc">
+        Thinking out loud about AI development, economic structures, and how
+        we might get to a future that works for more people.
+      </p>
+      <ul class="post-list" aria-label="Recent posts in Towards Abundance">
+        {abundancePosts.map(post => (
+          <BlogCard
+            title={post.data.title}
+            date={post.data.date}
+            description={post.data.description ?? ''}
+            href={`/abundance/${post.id}`}
+          />
+        ))}
+      </ul>
+      <a href="/abundance" class="hand blog-all">all posts →</a>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .about {
+    padding-block: 2rem;
+    max-width: 600px;
+    font-size: 1.05rem;
+    color: var(--ink-light);
+  }
+
+  .blogs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    padding-block: 3rem;
+    align-items: start;
+  }
+
+  .blog-header { margin-bottom: 0.75rem; }
+
+  .blog-subtitle {
+    font-family: var(--font-hand);
+    color: var(--ink-light);
+    font-size: 1rem;
+    margin-top: -0.5rem;
+    font-style: italic;
+  }
+
+  .blog-desc {
+    color: var(--ink-light);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .blog-all {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 1.05rem;
+    color: var(--accent2);
+  }
+  .blog-all:hover { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .blogs-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  }
+</style>

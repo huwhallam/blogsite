@@ -151,8 +151,7 @@ document.fonts.ready.then(() => {
   // Spread fraction: 0 = all together, 1 = normal text spacing.
   // Kicks in only in the last ~45% of the solution path.
   function spreadFraction(): number {
-    const p = leadProximity();
-    return Math.max(0, Math.min(1, (p - 0.55) / 0.45));
+    return leadProximity(); // linear: 0 at entry, 1 at exit
   }
 
   // Rotation amplitude: 1 = full chaos, 0 = upright.
@@ -321,14 +320,14 @@ document.fonts.ready.then(() => {
       const trailIdx = Math.min(Math.floor(tPos), trail.length - 1);
       const [cr, cc] = trail[trailIdx];
       const charProx  = maxDist > 0 ? Math.max(0, 1 - dist[cr][cc] / maxDist) : 0;
-      const rAmp     = rotAmp(charProx);
+      const rAmp = rotAmp(charProx);
 
-      // Jitter (also fades near exit)
-      const jAmt = rAmp * 4;
+      // Jitter persists throughout — a gentle minimum stays even at the exit
+      const jAmt = 2 + rAmp * 3;  // 5px far from exit, 2px at exit
       const jx   = Math.sin(animTime * 2.3 + i * 1.1) * jAmt;
       const jy   = Math.cos(animTime * 1.8 + i * 0.9) * jAmt;
 
-      // Rotation
+      // Rotation resolves to upright near the exit; jitter does not
       const rot = (initRot[i] + Math.sin(animTime * 2.8 + i * 0.75) * 22) * rAmp;
 
       const px = (x + jx).toFixed(2);

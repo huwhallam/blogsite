@@ -1,215 +1,346 @@
 ---
-// The maze is a 14 × 9 grid of cells.
-// Each cell is described as a set of walls to draw: T=top, R=right, B=bottom, L=left.
-// The solution path (array of [col, row] indices) threads through the maze from
-// the entry on the left edge to the exit on the right edge.
-// Characters of the label are placed as "beads" along this path.
 const LABEL = "Huw Hallam · Data Scientist";
 ---
 
 <section class="maze-section" aria-label="Interactive name maze">
-  <!-- Fallback for no-JS -->
   <noscript>
-    <h1 class="maze-fallback hand">{LABEL}</h1>
+    <h1 class="hand maze-fallback">{LABEL}</h1>
   </noscript>
-
   <div class="maze-wrap" id="maze-wrap">
-    <svg id="maze-svg" aria-hidden="true"></svg>
-    <p class="maze-hint hand" id="maze-hint">drag the string through the maze</p>
+    <svg
+      id="maze-svg"
+      viewBox="0 0 632 488"
+      aria-hidden="true"
+      style="opacity:0; transition: opacity 0.4s;"
+    ></svg>
+    <p class="hand maze-hint" id="maze-hint">drag to guide the string through the maze →</p>
   </div>
-
-  <h1 class="maze-title hand" id="maze-title" aria-live="polite"></h1>
+  <h1 class="hand maze-title" id="maze-title" aria-live="polite"></h1>
 </section>
 
 <script>
 import rough from 'roughjs';
 
-// ── Maze definition ──────────────────────────────────────────────────────────
-// 14 cols × 9 rows. Walls: each cell stores which walls to draw.
-// 0=open, 1=wall. Order: [top, right, bottom, left]
-// Entry: row 4 left edge (left wall open). Exit: row 4 right edge (right wall open).
+// ── Constants ──────────────────────────────────────────────────────────────
+const COLS = 12, ROWS = 8, CELL = 48;
+const PL = 28, PR = 28, PT = 52, PB = 52;
 
-const COLS = 14;
-const ROWS = 9;
+const SEED    = 42;
+const LABEL   = "Huw Hallam · Data Scientist";
+const chars   = LABEL.split('');
+const N       = chars.length;
 
-// Compact wall map: each entry is [top, right, bottom, left] — 1 = draw wall, 0 = open
-// Hand-crafted for a satisfying path with some dead ends
-const WALLS: [0|1, 0|1, 0|1, 0|1][][] = [
-  // col: 0           1           2           3           4           5           6           7           8           9           10          11          12          13
-  [[1,0,1,1],[1,1,1,0],[1,0,1,1],[1,1,1,0],[1,0,1,1],[1,1,1,0],[1,1,1,1],[1,0,1,1],[1,1,1,0],[1,1,1,1],[1,0,1,1],[1,1,1,0],[1,0,1,1],[1,1,1,0]], // row 0
-  [[1,1,0,1],[0,1,1,1],[1,0,0,1],[0,1,1,0],[1,1,0,1],[0,0,1,1],[0,1,1,0],[1,1,0,1],[0,0,1,1],[0,1,1,0],[1,1,0,1],[0,0,1,1],[1,1,0,1],[0,1,1,0]], // row 1
-  [[0,0,1,1],[1,1,1,0],[0,1,1,1],[1,0,0,1],[0,1,1,0],[1,1,0,1],[1,0,1,1],[0,0,1,0],[1,1,1,1],[1,0,1,1],[0,1,0,1],[1,1,1,0],[0,0,1,1],[1,1,1,0]], // row 2
-  [[1,1,0,1],[0,0,1,1],[1,1,0,1],[0,1,1,0],[1,0,1,1],[0,1,0,1],[0,1,0,0],[1,1,0,1],[0,0,1,1],[0,1,1,0],[1,0,1,1],[0,1,0,1],[1,1,0,1],[0,0,1,1]], // row 3
-  [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]], // row 4 ← solution path (no walls)
-  [[1,1,0,1],[0,0,1,1],[1,1,0,1],[0,1,1,0],[1,0,1,1],[0,1,0,1],[0,1,0,0],[1,0,0,1],[0,1,1,0],[1,1,0,1],[0,0,1,1],[1,1,0,1],[0,0,0,1],[1,1,1,0]], // row 5
-  [[0,0,1,1],[1,1,1,0],[0,1,1,1],[1,0,0,1],[0,1,1,0],[1,1,0,1],[1,0,1,1],[0,1,0,0],[1,0,0,1],[0,0,1,0],[1,1,1,1],[0,1,1,0],[1,0,1,1],[0,1,0,1]], // row 6
-  [[1,1,0,1],[0,1,0,1],[1,0,1,1],[0,0,1,0],[1,1,0,1],[0,1,0,1],[0,0,1,1],[1,1,0,1],[0,1,1,0],[1,0,1,1],[0,1,0,1],[1,1,0,1],[0,1,1,0],[1,0,0,1]], // row 7
-  [[0,1,1,1],[1,0,1,1],[1,1,1,0],[1,0,1,1],[0,1,1,0],[1,1,1,1],[1,0,1,1],[0,1,1,0],[1,1,1,1],[0,1,1,0],[1,1,1,1],[0,1,1,0],[1,1,1,1],[0,1,1,0]], // row 8
-];
+const START_R = ROWS - 1, START_C = 0;      // entry: bottom-left
+const END_R   = 0,        END_C   = COLS - 1; // exit:  top-right
 
-// Solution path: row 4 straight across (simplified but visually works with the wall layout)
-const PATH: [number, number][] = Array.from({ length: COLS }, (_, c) => [c, 4]);
+const BG     = '#faf6ef';
+const INK    = '#2a1f14';
+const ACCENT = '#c96a2b';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-// ── Setup ────────────────────────────────────────────────────────────────────
-const CELL = 54; // px per cell
-const PAD  = 28; // outer padding
-const W    = COLS * CELL + PAD * 2;
-const H    = ROWS * CELL + PAD * 2;
-
-const LABEL = "Huw Hallam · Data Scientist";
-
-function cx(col: number): number { return PAD + col * CELL + CELL / 2; }
-function cy(row: number): number { return PAD + row * CELL + CELL / 2; }
-
-// Interpolate a position along the path (t = 0..1)
-function pathPos(t: number): { x: number; y: number } {
-  const total = PATH.length - 1;
-  const idx   = Math.min(t * total, total - 0.001);
-  const lo    = Math.floor(idx);
-  const hi    = Math.min(lo + 1, total);
-  const frac  = idx - lo;
-  const [c0, r0] = PATH[lo];
-  const [c1, r1] = PATH[hi];
-  return {
-    x: cx(c0) + (cx(c1) - cx(c0)) * frac,
-    y: cy(r0) + (cy(r1) - cy(r0)) * frac,
+// ── Seeded PRNG (Mulberry32) ───────────────────────────────────────────────
+function makePRNG(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s + 0x6D2B79F5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
-const svg = document.getElementById('maze-svg') as SVGSVGElement;
-svg.setAttribute('width',  String(W));
-svg.setAttribute('height', String(H));
-svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+// ── Maze generation (iterative DFS to avoid stack overflow on large grids) ─
+// hOpen[r][c] = passage between (r,c) and (r+1,c)  [r: 0..ROWS-2]
+// vOpen[r][c] = passage between (r,c) and (r,c+1)  [c: 0..COLS-2]
+function generateMaze(rng: () => number) {
+  const hOpen: boolean[][] = Array.from({ length: ROWS - 1 }, () => Array(COLS).fill(false));
+  const vOpen: boolean[][] = Array.from({ length: ROWS },     () => Array(COLS - 1).fill(false));
+  const visited: boolean[][] = Array.from({ length: ROWS },   () => Array(COLS).fill(false));
 
-const rc = rough.svg(svg);
-
-const opts = {
-  stroke: '#2a1f14',
-  strokeWidth: 1.8,
-  roughness: 1.4,
-  bowing: 0.8,
-};
-
-// Outer border
-svg.appendChild(rc.rectangle(PAD - 2, PAD - 2, COLS * CELL + 4, ROWS * CELL + 4, { ...opts, roughness: 2 }));
-
-// Interior walls
-for (let row = 0; row < ROWS; row++) {
-  for (let col = 0; col < COLS; col++) {
-    const [top, right, bottom, left] = WALLS[row][col];
-    const x0 = PAD + col * CELL;
-    const y0 = PAD + row * CELL;
-
-    // Skip outer border walls (already drawn)
-    if (top    && row > 0)         svg.appendChild(rc.line(x0,           y0,           x0 + CELL,    y0,           opts));
-    if (right  && col < COLS - 1)  svg.appendChild(rc.line(x0 + CELL,   y0,           x0 + CELL,    y0 + CELL,    opts));
-    if (bottom && row < ROWS - 1)  svg.appendChild(rc.line(x0,           y0 + CELL,    x0 + CELL,    y0 + CELL,    opts));
-    if (left   && col > 0)         svg.appendChild(rc.line(x0,           y0,           x0,           y0 + CELL,    opts));
-  }
-}
-
-// Entry gap (row 4, left wall) — erase outer border segment
-// Draw background-coloured rectangle to "erase" part of border
-const entryY = PAD + 4 * CELL;
-const gapCover = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-gapCover.setAttribute('x',      String(PAD - 8));
-gapCover.setAttribute('y',      String(entryY + 4));
-gapCover.setAttribute('width',  '14');
-gapCover.setAttribute('height', String(CELL - 8));
-gapCover.setAttribute('fill',   '#faf6ef');
-svg.appendChild(gapCover);
-
-// Exit gap (row 4, right wall)
-const exitX = PAD + COLS * CELL;
-const exitCover = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-exitCover.setAttribute('x',      String(exitX - 6));
-exitCover.setAttribute('y',      String(entryY + 4));
-exitCover.setAttribute('width',  '14');
-exitCover.setAttribute('height', String(CELL - 8));
-exitCover.setAttribute('fill',   '#faf6ef');
-svg.appendChild(exitCover);
-
-// ── Characters as SVG text elements ─────────────────────────────────────────
-const chars = LABEL.split('');
-// We want the chars to spread along ~80% of the path length, trailing behind
-const SPREAD = 0.75;
-
-const charEls: SVGTextElement[] = chars.map((ch) => {
-  const el = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  el.textContent = ch === ' ' ? '\u00a0' : ch;
-  el.setAttribute('font-family', "'Caveat', cursive");
-  el.setAttribute('font-size',   '22');
-  el.setAttribute('font-weight', '600');
-  el.setAttribute('fill',        '#c96a2b');
-  el.setAttribute('text-anchor', 'middle');
-  el.setAttribute('dominant-baseline', 'central');
-  svg.appendChild(el);
-  return el;
-});
-
-// Thread progress: 0 = chars all bunched at entry; 1 = last char at exit
-let progress = 0; // starts so head (char[0]) is at entry
-
-function positionChars(headT: number) {
-  chars.forEach((_, i) => {
-    // Each char lags behind the head by an amount proportional to its index
-    const lag = (i / (chars.length - 1)) * SPREAD;
-    const t   = Math.max(0, headT - lag);
-    const { x, y } = pathPos(t);
-    charEls[i].setAttribute('x', String(x));
-    charEls[i].setAttribute('y', String(y));
-    // Fade in chars as they enter the maze
-    charEls[i].setAttribute('opacity', String(Math.min(1, t * 8)));
-  });
-}
-
-positionChars(0);
-
-// ── Drag interaction ─────────────────────────────────────────────────────────
-let dragging = false;
-let startX = 0;
-let startProgress = 0;
-const pathPixels = (PATH.length - 1) * CELL; // total pixel length of path
-
-function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)); }
-
-function onDown(e: MouseEvent | TouchEvent) {
-  dragging = true;
-  startX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-  startProgress = progress;
-}
-
-function onMove(e: MouseEvent | TouchEvent) {
-  if (!dragging) return;
-  const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-  const dx = clientX - startX;
-  progress = clamp(startProgress + dx / pathPixels, 0, 1);
-  positionChars(progress);
-
-  // When fully threaded, reveal the h1 title
-  const hint = document.getElementById('maze-hint');
-  const title = document.getElementById('maze-title');
-  if (progress >= 0.98) {
-    if (hint) hint.style.opacity = '0';
-    if (title) {
-      title.textContent = 'Huw Hallam · Data Scientist';
-      title.style.opacity = '1';
+  function shuffle<T>(arr: T[]): T[] {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-  } else {
-    if (hint) hint.style.opacity = String(1 - progress * 1.5);
-    if (title) title.style.opacity = '0';
+    return arr;
   }
+
+  const stack: [number, number][] = [[START_R, START_C]];
+  visited[START_R][START_C] = true;
+
+  while (stack.length) {
+    const [r, c] = stack[stack.length - 1];
+    const neighbours = shuffle(
+      ([[r-1,c],[r+1,c],[r,c-1],[r,c+1]] as [number,number][])
+        .filter(([nr,nc]) => nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && !visited[nr][nc])
+    );
+    if (neighbours.length === 0) {
+      stack.pop();
+    } else {
+      const [nr, nc] = neighbours[0];
+      visited[nr][nc] = true;
+      if      (nr === r - 1) hOpen[nr][c]  = true;
+      else if (nr === r + 1) hOpen[r][c]   = true;
+      else if (nc === c - 1) vOpen[r][nc]  = true;
+      else                   vOpen[r][c]   = true;
+      stack.push([nr, nc]);
+    }
+  }
+  return { hOpen, vOpen };
 }
 
-function onUp() { dragging = false; }
+// ── BFS path finding ───────────────────────────────────────────────────────
+function findPath(hOpen: boolean[][], vOpen: boolean[][]): [number, number][] {
+  const key = (r: number, c: number) => r * COLS + c;
+  const prev = new Int32Array(ROWS * COLS).fill(-1);
+  prev[key(START_R, START_C)] = key(START_R, START_C); // sentinel: points to itself
+  const queue: [number, number][] = [[START_R, START_C]];
 
-svg.addEventListener('mousedown',  onDown);
-svg.addEventListener('touchstart', onDown, { passive: true });
-window.addEventListener('mousemove',  onMove);
-window.addEventListener('touchmove',  onMove, { passive: true });
-window.addEventListener('mouseup',   onUp);
-window.addEventListener('touchend',  onUp);
+  outer: for (let qi = 0; qi < queue.length; qi++) {
+    const [r, c] = queue[qi];
+    if (r === END_R && c === END_C) break outer;
+    const moves: [number, number, boolean][] = [
+      [r-1, c, r > 0        && hOpen[r-1][c]],
+      [r+1, c, r < ROWS - 1 && hOpen[r][c]],
+      [r, c-1, c > 0        && vOpen[r][c-1]],
+      [r, c+1, c < COLS - 1 && vOpen[r][c]],
+    ];
+    for (const [nr, nc, open] of moves) {
+      if (!open) continue;
+      const nk = key(nr, nc);
+      if (prev[nk] !== -1) continue;
+      prev[nk] = key(r, c);
+      queue.push([nr, nc]);
+    }
+  }
+
+  const endKey = key(END_R, END_C);
+  if (prev[endKey] === -1) return [];
+
+  const path: [number, number][] = [];
+  let k = endKey;
+  while (true) {
+    path.unshift([Math.floor(k / COLS), k % COLS]);
+    const pk = prev[k];
+    if (pk === k) break; // reached start sentinel
+    k = pk;
+  }
+  return path;
+}
+
+// ── Coordinate helpers ─────────────────────────────────────────────────────
+const cx = (c: number) => PL + c * CELL + CELL / 2;
+const cy = (r: number) => PT + r * CELL + CELL / 2;
+
+function pathPos(path: [number,number][], t: number): { x: number; y: number } {
+  const n = path.length - 1;
+  if (n <= 0) return { x: cx(path[0][1]), y: cy(path[0][0]) };
+  const clamped = Math.max(0, Math.min(n - 0.0001, t * n));
+  const lo = Math.floor(clamped), hi = lo + 1;
+  const f  = clamped - lo;
+  const [r0, c0] = path[lo], [r1, c1] = path[Math.min(hi, n)];
+  return { x: cx(c0) + (cx(c1) - cx(c0)) * f, y: cy(r0) + (cy(r1) - cy(r0)) * f };
+}
+
+// ── Char path position ─────────────────────────────────────────────────────
+// progress 0→2:
+//   0 = all chars clustered at entry
+//   1 = chars spread from entry (H at pos 0) to exit (last 't' at pos 1)
+//   2 = all chars gathered at exit
+// Text reads H→t in the direction entry→exit.
+// 't' (index N-1) leads; 'H' (index 0) trails.
+function charT(i: number, progress: number): number {
+  return Math.max(0, Math.min(1, progress - 1 + i / (N - 1)));
+}
+
+// ── Main init (runs after fonts load) ─────────────────────────────────────
+const svg = document.getElementById('maze-svg') as SVGSVGElement;
+
+document.fonts.ready.then(() => {
+  const rng = makePRNG(SEED);
+  const { hOpen, vOpen } = generateMaze(rng);
+  const path = findPath(hOpen, vOpen);
+
+  if (path.length === 0) {
+    const t = document.getElementById('maze-title');
+    if (t) { t.textContent = LABEL; t.style.opacity = '1'; }
+    return;
+  }
+
+  // Draw maze walls
+  drawMaze(hOpen, vOpen);
+  // Draw arrow + crown
+  drawDecorations();
+  // Create character elements
+  const charEls = createCharElements(path);
+
+  svg.style.opacity = '1';
+
+  // ── Animation loop ─────────────────────────────────────────────────────
+  let progress  = 0;
+  let animTime  = 0;
+  let lastTS    = 0;
+
+  // Random per-char initial rotation (seeded)
+  const rng2    = makePRNG(77);
+  const initRot = Array.from({ length: N }, () => (rng2() * 2 - 1) * 48);
+
+  function updateChars(dt: number) {
+    animTime += dt;
+    for (let i = 0; i < N; i++) {
+      const t       = charT(i, progress);
+      const { x, y } = pathPos(path, t);
+
+      // Jitter diminishes as char reaches its spread position
+      const spread = t; // 0=at cluster, 1=at final position
+      const jAmt   = (1 - spread) * 5;
+      const jx     = Math.sin(animTime * 2.3 + i * 1.1) * jAmt;
+      const jy     = Math.cos(animTime * 1.8 + i * 0.9) * jAmt;
+
+      // Rotation: starts random + bouncy, converges to 0° (upright)
+      const rot = (initRot[i] + Math.sin(animTime * 2.8 + i * 0.75) * 22) * (1 - spread);
+
+      const px = (x + jx).toFixed(2);
+      const py = (y + jy).toFixed(2);
+      const el = charEls[i];
+      el.setAttribute('x', px);
+      el.setAttribute('y', py);
+      el.setAttribute('transform', `rotate(${rot.toFixed(1)},${px},${py})`);
+      // Fade in: chars are dim when stacked, bright when separated
+      el.setAttribute('opacity', String(Math.min(1, 0.25 + spread * 0.75)));
+    }
+  }
+
+  function frame(ts: number) {
+    const dt = Math.min((ts - lastTS) / 1000, 0.05);
+    lastTS = ts;
+    updateChars(dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(ts => { lastTS = ts; requestAnimationFrame(frame); });
+
+  // ── Drag ──────────────────────────────────────────────────────────────
+  let dragging  = false;
+  let dragX0    = 0;
+  let progX0    = 0;
+  // Full drag distance (in px) to go from progress=0 to progress=2
+  const dragRange = (path.length - 1) * CELL * 0.7;
+
+  function startDrag(clientX: number) {
+    dragging = true; dragX0 = clientX; progX0 = progress;
+  }
+  function moveDrag(clientX: number) {
+    if (!dragging) return;
+    progress = Math.max(0, Math.min(2, progX0 + (clientX - dragX0) / dragRange * 2));
+    const hint  = document.getElementById('maze-hint');
+    const title = document.getElementById('maze-title');
+    if (progress >= 1.92) {
+      if (hint)  hint.style.opacity  = '0';
+      if (title) { title.textContent = LABEL; title.style.opacity = '1'; }
+    } else {
+      if (hint)  hint.style.opacity  = String(Math.max(0, 1 - progress * 1.2));
+      if (title) title.style.opacity = '0';
+    }
+  }
+
+  svg.addEventListener('mousedown',  e  => startDrag(e.clientX));
+  svg.addEventListener('touchstart', e  => { e.preventDefault(); startDrag(e.touches[0].clientX); }, { passive: false });
+  window.addEventListener('mousemove', e => moveDrag(e.clientX));
+  window.addEventListener('touchmove', e => moveDrag(e.touches[0].clientX), { passive: true });
+  window.addEventListener('mouseup',  () => { dragging = false; });
+  window.addEventListener('touchend', () => { dragging = false; });
+
+  // ── Wall drawing ───────────────────────────────────────────────────────
+  function drawMaze(hOpen: boolean[][], vOpen: boolean[][]) {
+    const rc   = rough.svg(svg);
+    const opts = { stroke: INK, strokeWidth: 1.8, roughness: 1.6, bowing: 0.8 };
+
+    const mazeL = PL, mazeR = PL + COLS * CELL;
+    const mazeT = PT, mazeB = PT + ROWS * CELL;
+
+    // Outer border — four sides, with entry gap (bottom-left) and exit gap (top-right)
+    const egL = mazeL + 4,          egR = mazeL + CELL - 4;   // entry gap x range
+    const xgL = mazeR - CELL + 4,   xgR = mazeR - 4;          // exit gap x range
+
+    svg.appendChild(rc.line(egR,    mazeB, mazeR, mazeB, opts)); // bottom: right of entry gap
+    svg.appendChild(rc.line(mazeL,  mazeB, egL,   mazeB, opts)); // bottom: left stub
+    svg.appendChild(rc.line(mazeL,  mazeT, xgL,   mazeT, opts)); // top: left of exit gap
+    svg.appendChild(rc.line(xgR,    mazeT, mazeR, mazeT, opts)); // top: right stub
+    svg.appendChild(rc.line(mazeL,  mazeT, mazeL, mazeB, opts)); // left wall
+    svg.appendChild(rc.line(mazeR,  mazeT, mazeR, mazeB, opts)); // right wall
+
+    // Interior horizontal walls (between row r and row r+1)
+    for (let r = 0; r < ROWS - 1; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (!hOpen[r][c]) {
+          svg.appendChild(rc.line(
+            PL + c * CELL,       PT + (r + 1) * CELL,
+            PL + (c + 1) * CELL, PT + (r + 1) * CELL,
+            opts
+          ));
+        }
+      }
+    }
+
+    // Interior vertical walls (between col c and col c+1)
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS - 1; c++) {
+        if (!vOpen[r][c]) {
+          svg.appendChild(rc.line(
+            PL + (c + 1) * CELL, PT + r * CELL,
+            PL + (c + 1) * CELL, PT + (r + 1) * CELL,
+            opts
+          ));
+        }
+      }
+    }
+  }
+
+  function drawDecorations() {
+    const rc   = rough.svg(svg);
+    const aOpts = { stroke: ACCENT, strokeWidth: 2.2, roughness: 1.2, bowing: 0.6 };
+
+    // Entry arrow: below bottom wall at col 0, pointing up into the maze
+    const ax = PL + START_C * CELL + CELL / 2;
+    const ay = PT + ROWS * CELL + 12;
+    svg.appendChild(rc.line(ax,     ay + 26, ax,     ay + 4,  aOpts)); // stem
+    svg.appendChild(rc.line(ax - 9, ay + 15, ax,     ay + 4,  aOpts)); // left head
+    svg.appendChild(rc.line(ax + 9, ay + 15, ax,     ay + 4,  aOpts)); // right head
+
+    // Crown: above top wall at col COLS-1, pointing up from exit
+    const kx = PL + END_C * CELL + CELL / 2;
+    const ky = PT - 12;
+    const crownPath =
+      `M ${kx - 17} ${ky} ` +
+      `L ${kx - 17} ${ky - 13} ` +
+      `L ${kx - 8}  ${ky - 7} ` +
+      `L ${kx}      ${ky - 17} ` +
+      `L ${kx + 8}  ${ky - 7} ` +
+      `L ${kx + 17} ${ky - 13} ` +
+      `L ${kx + 17} ${ky} Z`;
+    svg.appendChild(rc.path(crownPath, { ...aOpts, fill: 'none' }));
+  }
+
+  function createCharElements(path: [number,number][]): SVGTextElement[] {
+    // All chars start stacked at the entry cell
+    const start = pathPos(path, 0);
+    return chars.map(ch => {
+      const el = document.createElementNS(SVG_NS, 'text');
+      el.textContent     = ch === ' ' ? '\u00a0' : ch;
+      el.setAttribute('font-family',        "'Caveat', cursive");
+      el.setAttribute('font-size',          '22');
+      el.setAttribute('font-weight',        '600');
+      el.setAttribute('fill',               ACCENT);
+      el.setAttribute('text-anchor',        'middle');
+      el.setAttribute('dominant-baseline',  'central');
+      el.setAttribute('opacity',            '0.25');
+      el.setAttribute('x',                  String(start.x));
+      el.setAttribute('y',                  String(start.y));
+      svg.appendChild(el);
+      return el;
+    });
+  }
+});
 </script>
 
 <style>
@@ -218,7 +349,7 @@ window.addEventListener('touchend',  onUp);
     flex-direction: column;
     align-items: center;
     padding-block: 3rem 1.5rem;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
   .maze-wrap {
@@ -233,14 +364,15 @@ window.addEventListener('touchend',  onUp);
 
   #maze-svg {
     display: block;
-    max-width: 100%;
+    width: 100%;
+    max-width: 632px;
+    height: auto;
   }
 
   .maze-hint {
-    text-align: center;
     color: var(--ink-light);
     font-size: 1rem;
-    margin-top: 0.5rem;
+    text-align: center;
     transition: opacity 0.3s;
   }
 

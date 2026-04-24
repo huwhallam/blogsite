@@ -11,7 +11,7 @@ Teething pains aren't unusual for a new technology. What's unusual is the scale,
 
 And we're treating it, for the most part, like a somewhat bewildering productivity tool.
 
-The future, as I see it, runs down one of three paths. We freefall — let the technology develop, trust the market, pick up the pieces where they land. If there's anything left (of us) to pick up. We resist — try to limit AI's reach before it reshapes economic life beyond recognition. Or we build something new: an economy that uses AI to meet human needs, with new mechanisms for distributing wealth and for nurturing meaningful flourishing lives — mechanisms that don't assume most people spend most of their lives in paid employment.
+The future, as I see it, runs down one of three paths. We freefall — let the technology develop, trust the market, pick up the pieces where they land. If there's anything left (of us) to pick up. Or we resist — try to limit AI's reach before it reshapes economic life beyond recognition. Or we build something new: an economy that uses AI to meet human needs, with new mechanisms for distributing wealth and for nurturing meaningful flourishing lives — mechanisms that don't assume most people spend most of their lives in paid employment.
 
 We're on path one. This blog is about path three. It's about harnessing AI's promise of abundance.
 

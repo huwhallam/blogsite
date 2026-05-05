@@ -388,17 +388,15 @@ document.fonts.ready.then(() => {
 
   .maze-wrap {
     position: relative;
+    width: min(960px, 96vw);
     user-select: none;
     touch-action: none;
-    max-width: 100%;
-    overflow-x: auto;
     cursor: crosshair;
   }
 
   #maze-svg {
     display: block;
     width: 100%;
-    max-width: 632px;
     height: auto;
   }
 

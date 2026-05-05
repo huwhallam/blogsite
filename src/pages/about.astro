@@ -8,24 +8,28 @@ import Base from '../layouts/Base.astro';
 >
   <article class="about-page container">
 
+    <h1 class="hand about-heading">Not your average data scientist</h1>
+
     <div class="about-hero">
-      <img
-        src="/profile_image.jpg"
-        alt="Huw Hallam"
-        class="about-photo"
-        width="260"
-        height="260"
-      />
-      <div class="about-intro">
-        <h1 class="hand">Not your average data scientist</h1>
-        <p>
-          Perhaps because I have a background in music and art, I tend to think about data
-          as a listening and design problem. Before reaching for an algorithm, I'm asking:
-          what is this data actually saying? What matters here, and to whom? I'm listening
-          for signal in the noise, designing a way to communicate or build with it. I care
-          as much about how an insight lands as whether it's technically correct.
-        </p>
+      <div class="photo-frame">
+        <img
+          src="/profile_image.jpg"
+          alt="Huw Hallam"
+          class="about-photo"
+          id="about-photo"
+          width="260"
+          height="260"
+        />
+        <svg class="photo-outline" id="photo-outline" aria-hidden="true"></svg>
       </div>
+      <p>
+        Perhaps because I have a background in music and art, I tend to think about data
+        as a listening and design problem. Before reaching for an algorithm, I'm asking:
+        what is this data actually saying? What matters here, and to whom? I'm listening
+        for signal in the noise, designing a way to communicate or build with it.
+        Getting things right from a technical standpoint is a must but it's not enough.
+        I care about how insight lands and how data can build change.
+      </p>
     </div>
 
     <p>
@@ -85,17 +89,28 @@ import Base from '../layouts/Base.astro';
     grid-template-columns: 200px 1fr;
     gap: 2.5rem;
     align-items: start;
+    margin-top: 1rem;
     margin-bottom: 1.75rem;
   }
 
+  .photo-frame {
+    position: relative;
+    width: fit-content;
+  }
+
   .about-photo {
+    display: block;
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
-    border-radius: 50%;
-    border: 3px solid var(--bg-card);
-    outline: 2px solid var(--accent);
-    outline-offset: 3px;
+  }
+
+  .photo-outline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    overflow: visible;
   }
 
   .about-intro h1 {
@@ -146,9 +161,80 @@ import Base from '../layouts/Base.astro';
       grid-template-columns: 1fr;
     }
 
-    .about-photo {
+    .photo-frame {
       width: 140px;
       margin-inline: auto;
     }
   }
 </style>
+
+<script>
+import rough from 'roughjs';
+
+// Build an SVG path that zigzags along a straight line between two points.
+// Each tooth alternates left/right of the line by `amp` pixels.
+function zigzagPath(x1: number, y1: number, x2: number, y2: number, toothWidth: number, amp: number): string {
+  const dx = x2 - x1, dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  const ux = dx / len, uy = dy / len;   // unit along edge
+  const px = -uy, py = ux;              // unit perpendicular (left of travel)
+
+  const steps = Math.round(len / toothWidth);
+  const step = len / steps;
+
+  let d = `M ${x1} ${y1}`;
+  for (let i = 1; i <= steps; i++) {
+    const t = i * step;
+    const cx = x1 + ux * t;
+    const cy = y1 + uy * t;
+    const sign = i % 2 === 0 ? 1 : -1;
+    d += ` L ${(cx + px * sign * amp).toFixed(1)} ${(cy + py * sign * amp).toFixed(1)}`;
+  }
+  return d;
+}
+
+function drawOutline() {
+  const img = document.getElementById('about-photo') as HTMLImageElement;
+  const svg = document.getElementById('photo-outline') as unknown as SVGSVGElement;
+  if (!img || !svg) return;
+
+  const w = img.offsetWidth;
+  const h = img.offsetHeight;
+  const pad = 10;   // space around image inside SVG
+  const amp = 5;    // zigzag peak-to-centre distance
+  const tooth = 11; // distance between zigzag peaks
+
+  svg.setAttribute('width', String(w + pad * 2));
+  svg.setAttribute('height', String(h + pad * 2));
+  svg.style.top = `-${pad}px`;
+  svg.style.left = `-${pad}px`;
+
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const rc = rough.svg(svg);
+  const opts = {
+    roughness: 1.0,   // keeps zigzag readable while still looking hand-drawn
+    bowing: 0.5,
+    stroke: '#c96a2b',
+    strokeWidth: 2,
+    fill: 'none',
+  };
+
+  const x = pad, y = pad;
+  for (const d of [
+    zigzagPath(x,     y,     x + w, y,     tooth, amp), // top
+    zigzagPath(x + w, y,     x + w, y + h, tooth, amp), // right
+    zigzagPath(x + w, y + h, x,     y + h, tooth, amp), // bottom
+    zigzagPath(x,     y + h, x,     y,     tooth, amp), // left
+  ]) {
+    svg.appendChild(rc.path(d, opts));
+  }
+}
+
+const img = document.getElementById('about-photo') as HTMLImageElement;
+if (img?.complete) {
+  drawOutline();
+} else {
+  img?.addEventListener('load', drawOutline);
+}
+</script>

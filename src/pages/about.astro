@@ -1,0 +1,154 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base
+  title="About — Huw Hallam"
+  description="Data scientist with a background in art and music. Building civic technology, thinking about AI safety, and asking what data can do for society."
+>
+  <article class="about-page container">
+
+    <div class="about-hero">
+      <img
+        src="/profile_image.jpg"
+        alt="Huw Hallam"
+        class="about-photo"
+        width="260"
+        height="260"
+      />
+      <div class="about-intro">
+        <h1 class="hand">Not your average data scientist</h1>
+        <p>
+          Perhaps because I have a background in music and art, I tend to think about data
+          as a listening and design problem. Before reaching for an algorithm, I'm asking:
+          what is this data actually saying? What matters here, and to whom? I'm listening
+          for signal in the noise, designing a way to communicate or build with it. I care
+          as much about how an insight lands as whether it's technically correct.
+        </p>
+      </div>
+    </div>
+
+    <p>
+      What motivates me most is the belief that data and AI can be genuinely useful for
+      society — not just for optimising conversion rates. I'm drawn to the hard questions:
+      how do we develop AI in ways that are safe and broadly beneficial? What would an
+      economics of abundance actually look like? I write about these in
+      <a href="/abundance"><em>Towards Abundance</em></a> — thinking out loud, in public,
+      about what a good outcome might require.
+    </p>
+
+    <p>
+      I'm also building <a href="/commons"><em>The Commons</em></a> — a civic platform
+      aimed at reducing political polarisation and encouraging engagement in
+      non-confrontational ways. I'm convinced that the tools of data science and AI,
+      applied thoughtfully, could do real work here: helping people find common ground,
+      understand different perspectives, and participate in public life without it feeling
+      like a fight. I'm documenting the build as I go.
+    </p>
+
+    <p>
+      An art and music background trains you to look at the world creatively — to imagine
+      how things might be built differently, to see the gap between what exists and what
+      could exist. That's the lens I bring to all of this.
+    </p>
+
+    <div class="about-links">
+      <h2 class="hand">Elsewhere</h2>
+      <ul>
+        <li>
+          <a href="https://huwhallam.github.io/portfolio/" target="_blank" rel="noopener">
+            Data science portfolio →
+          </a>
+        </li>
+        <li>
+          <a href="https://independent.academia.edu/HuwHallam" target="_blank" rel="noopener">
+            Academia.edu →
+          </a>
+          <span class="link-note">
+            Writing from a previous life as a music and contemporary art researcher
+          </span>
+        </li>
+      </ul>
+    </div>
+
+  </article>
+</Base>
+
+<style>
+  .about-page {
+    padding-block: 3rem 4rem;
+    max-width: 680px;
+  }
+
+  .about-hero {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 2.5rem;
+    align-items: start;
+    margin-bottom: 1.75rem;
+  }
+
+  .about-photo {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--bg-card);
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .about-intro h1 {
+    margin-bottom: 0.6em;
+  }
+
+  .about-intro p {
+    margin-bottom: 0;
+  }
+
+  .about-page > p {
+    margin-bottom: 1.25em;
+    color: var(--ink);
+  }
+
+  .about-links {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--bg-card);
+  }
+
+  .about-links h2 {
+    margin-bottom: 0.75rem;
+  }
+
+  .about-links ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .about-links li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .link-note {
+    font-size: 0.9rem;
+    color: var(--ink-light);
+    font-style: italic;
+  }
+
+  @media (max-width: 540px) {
+    .about-hero {
+      grid-template-columns: 1fr;
+    }
+
+    .about-photo {
+      width: 140px;
+      margin-inline: auto;
+    }
+  }
+</style>

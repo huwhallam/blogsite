@@ -1,5 +1,6 @@
 ---
-const LABEL = "HUW HALLAM · DATA SCIENTIST";
+// noscript fallback only — the live label is chosen randomly in JS below
+const LABEL = "HUW HALLAM · FINDING THE SIGNAL";
 ---
 
 <section class="maze-section" aria-label="Interactive name maze">
@@ -25,7 +26,13 @@ import rough from 'roughjs';
 const COLS = 12, ROWS = 8, CELL = 48;
 const PL = 28, PR = 28, PT = 52, PB = 52;
 
-const LABEL  = "HUW HALLAM · DATA SCIENTIST";
+const LABELS = [
+  "HUW HALLAM · FINDING THE SIGNAL",
+  "HUW HALLAM · THINKING WITH DATA",
+  "HUW HALLAM · CURIOUS BY DESIGN",
+  "HUW HALLAM · DATA FOR THE COMMON GOOD",
+];
+const LABEL = LABELS[Math.floor(Math.random() * LABELS.length)];
 const chars  = LABEL.split('');
 const N      = chars.length;
 
